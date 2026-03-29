@@ -1,0 +1,40 @@
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: Arial;
+  text-align: center;
+}
+
+h1 {
+  margin-top: 20px;
+}
+
+#board {
+  width: 320px;
+  margin: 20px auto;
+}
+
+.start {
+  margin-top: 20px;
+}
+
+.controls {
+  margin-top: 15px;
+}
+
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  background: #38bdf8;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+#status {
+  margin-top: 10px;
+}
