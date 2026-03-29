@@ -93,3 +93,5 @@ function resetGame() {
   board.start();
   document.getElementById('status').innerText = "Game reset. Choose side.";
 }
+
+window.onload = () => startGame('white');
