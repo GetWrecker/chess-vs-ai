@@ -1,0 +1,6 @@
+{
+  "name": "chess-vs-ai",
+  "version": "1.0.0",
+  "description": "Chess game vs AI using WebSocket engine",
+  "private": true
+}
