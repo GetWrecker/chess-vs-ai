@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chess vs AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/chessboard.min.css">
+</head>
+
+<body>
+
+<h1>♟ Chess vs Computer</h1>
+
+<div class="start">
+  <button onclick="startGame('white')">Play as White</button>
+  <button onclick="startGame('black')">Play as Black</button>
+</div>
+
+<div id="board"></div>
+
+<div class="controls">
+  <button onclick="offerDraw()">Offer Draw</button>
+  <button onclick="resign()">Resign</button>
+</div>
+
+<p id="status">Choose your side to start</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/chessboard.min.js"></script>
+
+<script src="script.js"></script>
+
+</body>
+</html>
