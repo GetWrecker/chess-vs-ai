@@ -2,26 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess vs AI</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Rodent III Fischer - AI Opponent</title>
     <link rel="stylesheet"
       href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
 </head>
-<body>
+<body style="background: #2c3e50; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center;">
 
-    <div class="container">
-        <h1>Chess vs AI</h1>
-        <div id="myBoard" style="width: 400px"></div>
-        <div class="info">
-            <p>Status: <span id="status">White to move</span></p>
-            <button onclick="location.reload()">Reset Game</button>
-        </div>
-    </div>
+    <h2>Playing vs Rodent III (Fischer)</h2>
+    <div id="myBoard" style="width: 400px"></div>
+    <p id="status">Status: Connecting to engine...</p>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <script src="script.js"></script>
+
+    <script>
+        var board = null;
+        var socket = new WebSocket('wss://ProtonnDev-engine.hf.space/rodent3-fischer');
+        var $status = $('#status');
+
+        // --- 1. WebSocket Engine Logic ---
+
+        socket.onopen = function() {
+            $status.html("Status: Connected. Your move (White).");
+            socket.send("uci");
+            socket.send("isready");
+        };
+
+        socket.onmessage = function(event) {
+            const msg = event.data;
+            console.log("Engine:", msg);
+
+            if (msg.startsWith('bestmove')) {
+                const move = msg.split(' ')[1];
+                const source = move.substring(0, 2);
+                const target = move.substring(2, 4);
+                
+                // Move the piece on the visual board
+                board.move(source + '-' + target);
+                $status.html("Status: Your turn.");
+            }
+        };
+
+        // --- 2. Chessboard Configuration ---
+
+        function onDrop(source, target, piece, newPos, oldPos, orientation) {
+            // Check if move is legal (simple check: don't move to same spot)
+            if (source === target) return 'snapback';
+
+            $status.html("Status: Engine is thinking...");
+            
+            // Convert board position to FEN to send to engine
+            const fen = Chessboard.objToFen(newPos);
+            
+            // Tell engine the new position and ask for a move
+            // Note: We add 'w' or 'b' depending on who just moved. 
+            // For simplicity, this assumes you are White.
+            socket.send(`position fen ${fen} b - - 0 1`);
+            socket.send("go movetime 1000");
+        }
+
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDrop: onDrop,
+            // THIS FIXES THE IMAGES: Using a direct URL to the piece sprites
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        };
+
+        board = Chessboard('myBoard', config);
+
+    </script>
 </body>
 </html>
