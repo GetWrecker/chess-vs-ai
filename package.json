@@ -1,6 +1,11 @@
 {
   "name": "chess-vs-ai",
   "version": "1.0.0",
-  "description": "Chess game vs AI using WebSocket engine",
-  "private": true
+  "description": "A simple Chess AI using Minimax",
+  "main": "script.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "start": "serve ."
+  }
 }
