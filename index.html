@@ -92,7 +92,7 @@
             }
             if (msg.startsWith('bestmove')) {
                 const moveStr = msg.split(' ')[1];
-                if (moveStr !== '(none)') {
+                if (moveStr && moveStr !== '(none)') {
                     game.move({ from: moveStr.substring(0, 2), to: moveStr.substring(2, 4), promotion: 'q' });
                     board.position(game.fen());
                     updateStatus();
@@ -177,29 +177,32 @@
 
         function removeHighlights() { $('#myBoard .square-55d63').removeClass('highlight-selected'); }
 
-        // --- SOCIAL & UTILS ---
         function copyPGN() {
             const pgn = game.pgn();
             navigator.clipboard.writeText(pgn).then(() => alert("PGN copied to clipboard!"));
         }
 
+        // --- DYNAMIC THUMBNAIL SHARING ---
         function share(platform) {
-            const text = encodeURIComponent("I just played a match against Rodent III AI! Check out my game. #Chess");
+            // Generates a link to a static image of the current FEN
+            const fen = game.fen().split(' ')[0]; // Get position only
+            const thumbUrl = `https://chess-api.com/v1/image?fen=${encodeURIComponent(fen)}&theme=wikipedia&size=600`;
+            
+            const text = encodeURIComponent(`I just played a match against Rodent III AI! Check out the final position.`);
             const url = encodeURIComponent(window.location.href);
             let shareUrl = "";
 
+            // We append the thumbnail URL to the message so platforms can unfurl it
+            const fullMessage = `${text}%0AFinal Position: ${encodeURIComponent(thumbUrl)}%0A`;
+
             switch(platform) {
-                case 'fb': shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`; break;
-                case 'x':  shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`; break;
-                case 'wa': shareUrl = `https://api.whatsapp.com/send?text=${text}%20${url}`; break;
+                case 'fb': shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}&picture=${encodeURIComponent(thumbUrl)}`; break;
+                case 'x':  shareUrl = `https://twitter.com/intent/tweet?text=${fullMessage}&url=${url}`; break;
+                case 'wa': shareUrl = `https://api.whatsapp.com/send?text=${fullMessage}%20${url}`; break;
                 case 'ms': shareUrl = `fb-messenger://share/?link=${url}`; break;
             }
             
-            if (platform === 'ms' && !/Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                alert("Messenger app sharing is primarily for mobile devices.");
-            } else {
-                window.open(shareUrl, '_blank');
-            }
+            window.open(shareUrl, '_blank');
         }
     </script>
 </body>
