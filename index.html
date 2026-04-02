@@ -1,7 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Rodent III - Tactical Human AI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Rodent III Chess - Play the Best Tactical Human AI Online</title>
+    <meta name="description" content="Play against Rodent III, the most tactical and human-like chess AI. Experience realistic club-player moves, post-game analysis, and instant PGN sharing.">
+    <meta name="keywords" content="Chess, Play Chess Online, Rodent III Chess, Tactical Chess AI, Human-like Chess Engine, Stockfish 18 Analysis">
+    
+    <meta property="og:title" content="Rodent III Chess - Tactical Human AI">
+    <meta property="og:description" content="Can you beat the world's most human-like chess engine? Play Rodent III now.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://chess-api.com/v1/image?fen=rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR&theme=wikipedia">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Rodent III Tactical Chess",
+      "operatingSystem": "Web",
+      "applicationCategory": "GameApplication",
+      "description": "A high-performance chess application featuring the Rodent III engine for human-like tactical play and Stockfish 18 for post-game reviews.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
         body { background: #161512; color: #bababa; font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; margin: 0; padding: 20px; }
@@ -15,21 +42,16 @@
 
         #overlay, #game-over-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal { background: #262421; padding: 40px; border-radius: 12px; border: 1px solid #3c3934; max-width: 400px; }
-        
         .share-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
         .btn-new { background: #95bb4a; color: #161512; width: 100%; margin-top: 20px; font-size: 1.1em; }
-        .btn-fb { background: #3b5998; color: white; }
-        .btn-x { background: #000000; color: white; }
-        .btn-wa { background: #25d366; color: white; }
-        .btn-ms { background: #0084ff; color: white; }
     </style>
 </head>
 <body>
 
     <div id="overlay">
         <div class="modal">
-            <h2 style="color:#fff">New Match</h2>
-            <p>Select your side to begin against Rodent III</p>
+            <h1 style="color:#fff; font-size: 1.5em; margin-top:0;">Rodent III Chess</h1>
+            <p>Select your side to begin against the Tactical AI</p>
             <button onclick="startGame('w')">White</button>
             <button onclick="startGame('b')">Black</button>
         </div>
@@ -37,25 +59,22 @@
 
     <div id="game-over-overlay" style="display:none;">
         <div class="modal">
-            <h2 id="end-title" style="color:#fff">Game Over</h2>
-            <p id="end-reason">Match Finished</p>
-            
-            <button onclick="copyPGN()" style="width:100%">Copy PGN Record</button>
-            
+            <h2 id="end-title" style="color:#fff">Match Finished</h2>
+            <p id="end-reason"></p>
+            <button onclick="copyPGN()" style="width:100%">Copy PGN</button>
             <div class="share-box">
-                <button class="btn-fb" onclick="share('fb')">Facebook</button>
-                <button class="btn-x" onclick="share('x')">X (Twitter)</button>
-                <button class="btn-wa" onclick="share('wa')">WhatsApp</button>
-                <button class="btn-ms" onclick="share('ms')">Messenger</button>
+                <button onclick="share('fb')" style="background:#3b5998; color:white">Facebook</button>
+                <button onclick="share('x')" style="background:#000; color:white">X (Twitter)</button>
+                <button onclick="share('wa')" style="background:#25d366; color:white">WhatsApp</button>
+                <button onclick="share('ms')" style="background:#0084ff; color:white">Messenger</button>
             </div>
-
             <button class="btn-new" onclick="location.reload()">New Game</button>
         </div>
     </div>
 
     <div class="info-panel">
         <div id="status" class="status">Connecting...</div>
-        <div id="engine-info" class="engine-msg">Initializing UCI Parameters...</div>
+        <div id="engine-info" class="engine-msg">Engine: Rodent III Tactical</div>
     </div>
 
     <div id="myBoard"></div>
@@ -70,28 +89,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
     <script>
-        var board = null;
-        var game = new Chess();
-        var playerColor = 'w';
-        var selectedSquare = null;
-        var engineEval = 0;
+        var board = null, game = new Chess();
+        var playerColor = 'w', selectedSquare = null, engineEval = 0;
         var socket = new WebSocket('wss://ProtonnDev-engine.hf.space/rodent3-fischer');
 
         socket.onopen = () => { 
             socket.send("uci");
             socket.send("setoption name Skill Level value 7");
-            document.getElementById('status').innerText = "Ready to Start";
+            document.getElementById('status').innerText = "Ready";
         };
 
         socket.onmessage = (e) => {
-            const msg = e.data;
-            if (msg.includes('score cp')) {
-                const parts = msg.split(' ');
-                const cpIndex = parts.indexOf('cp');
-                engineEval = parseInt(parts[cpIndex + 1]);
+            if (e.data.includes('score cp')) {
+                const parts = e.data.split(' ');
+                engineEval = parseInt(parts[parts.indexOf('cp') + 1]);
             }
-            if (msg.startsWith('bestmove')) {
-                const moveStr = msg.split(' ')[1];
+            if (e.data.startsWith('bestmove')) {
+                const moveStr = e.data.split(' ')[1];
                 if (moveStr && moveStr !== '(none)') {
                     game.move({ from: moveStr.substring(0, 2), to: moveStr.substring(2, 4), promotion: 'q' });
                     board.position(game.fen());
@@ -99,6 +113,21 @@
                 }
             }
         };
+
+        function startGame(side) {
+            playerColor = side;
+            document.getElementById('overlay').style.display = 'none';
+            board = Chessboard('myBoard', {
+                position: 'start',
+                orientation: (side === 'w' ? 'white' : 'black'),
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            });
+            $('#myBoard').on('click', '.square-55d63', function() {
+                handleSquareClick($(this).attr('data-square'));
+            });
+            if (playerColor === 'b') engineThink();
+            updateStatus();
+        }
 
         function handleSquareClick(square) {
             if (game.turn() !== playerColor || game.game_over()) return;
@@ -128,80 +157,43 @@
             socket.send("go depth 10"); 
         }
 
-        function showEndScreen(reason) {
-            document.getElementById('end-reason').innerText = reason;
-            document.getElementById('game-over-overlay').style.display = 'flex';
-        }
-
-        function handleResign() {
-            if (confirm("Are you sure you want to Resign?")) {
-                showEndScreen("You resigned the match.");
+        function updateStatus() {
+            if (game.game_over()) {
+                let reason = game.in_checkmate() ? "Checkmate!" : "Draw!";
+                document.getElementById('end-reason').innerText = reason;
+                document.getElementById('game-over-overlay').style.display = 'flex';
             }
+            document.getElementById('status').innerText = game.turn() === playerColor ? "Your Turn" : "Bot is thinking...";
         }
 
         function offerDraw() {
-            const threshold = (game.turn() === 'b') ? engineEval : -engineEval;
-            if (threshold > 150) {
-                alert("Computer declines the draw: 'I have a clear advantage!'");
-            } else {
-                showEndScreen("Draw accepted by Rodent III.");
+            const rel = (game.turn() === 'b') ? engineEval : -engineEval;
+            if (rel > 150) alert("Declined."); else { 
+                document.getElementById('end-reason').innerText = "Draw Accepted";
+                document.getElementById('game-over-overlay').style.display = 'flex';
             }
         }
 
-        function startGame(side) {
-            playerColor = side;
-            document.getElementById('overlay').style.display = 'none';
-            board = Chessboard('myBoard', {
-                position: 'start',
-                orientation: (side === 'w' ? 'white' : 'black'),
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-            });
-            $('#myBoard').on('click', '.square-55d63', function() {
-                handleSquareClick($(this).attr('data-square'));
-            });
-            if (playerColor === 'b') engineThink();
-            updateStatus();
-        }
-
-        function updateStatus() {
-            if (game.game_over()) {
-                let reason = "Game Over";
-                if (game.in_checkmate()) reason = "Checkmate! " + (game.turn() === 'w' ? 'Black' : 'White') + " wins.";
-                else if (game.in_draw()) reason = "The game ended in a draw.";
-                showEndScreen(reason);
-            }
-            const statusText = game.turn() === playerColor ? "Your Turn" : "Computer is thinking...";
-            document.getElementById('status').innerText = statusText;
-            document.getElementById('engine-info').innerText = "Rodent III Skill Level: 7 (Humanized)";
+        function handleResign() {
+            document.getElementById('end-reason').innerText = "Resigned";
+            document.getElementById('game-over-overlay').style.display = 'flex';
         }
 
         function removeHighlights() { $('#myBoard .square-55d63').removeClass('highlight-selected'); }
+        function copyPGN() { navigator.clipboard.writeText(game.pgn()); alert("PGN Copied!"); }
 
-        function copyPGN() {
-            const pgn = game.pgn();
-            navigator.clipboard.writeText(pgn).then(() => alert("PGN copied to clipboard!"));
-        }
-
-        // --- DYNAMIC THUMBNAIL SHARING ---
         function share(platform) {
-            // Generates a link to a static image of the current FEN
-            const fen = game.fen().split(' ')[0]; // Get position only
-            const thumbUrl = `https://chess-api.com/v1/image?fen=${encodeURIComponent(fen)}&theme=wikipedia&size=600`;
-            
-            const text = encodeURIComponent(`I just played a match against Rodent III AI! Check out the final position.`);
+            const fen = game.fen().split(' ')[0];
+            const thumbUrl = `https://chess-api.com/v1/image?fen=${encodeURIComponent(fen)}&theme=wikipedia`;
+            const text = encodeURIComponent("Check out my Chess match vs Rodent III!");
             const url = encodeURIComponent(window.location.href);
-            let shareUrl = "";
-
-            // We append the thumbnail URL to the message so platforms can unfurl it
-            const fullMessage = `${text}%0AFinal Position: ${encodeURIComponent(thumbUrl)}%0A`;
-
-            switch(platform) {
-                case 'fb': shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}&picture=${encodeURIComponent(thumbUrl)}`; break;
-                case 'x':  shareUrl = `https://twitter.com/intent/tweet?text=${fullMessage}&url=${url}`; break;
-                case 'wa': shareUrl = `https://api.whatsapp.com/send?text=${fullMessage}%20${url}`; break;
-                case 'ms': shareUrl = `fb-messenger://share/?link=${url}`; break;
-            }
+            const fullMsg = `${text}%0AView Match Position: ${encodeURIComponent(thumbUrl)}%0A`;
             
+            let shareUrl = "";
+            if(platform === 'fb') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+            if(platform === 'x') shareUrl = `https://twitter.com/intent/tweet?text=${fullMsg}&url=${url}`;
+            if(platform === 'wa') shareUrl = `https://api.whatsapp.com/send?text=${fullMsg}%20${url}`;
+            if(platform === 'ms') shareUrl = `fb-messenger://share/?link=${url}`;
             window.open(shareUrl, '_blank');
         }
     </script>
